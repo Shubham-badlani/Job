@@ -1,0 +1,193 @@
+{% extends "layout.html" %}
+
+{% block title %}AI Recruitment System - Home{% endblock %}
+
+{% block content %}
+<div class="row mb-5">
+    <div class="col-md-8 offset-md-2 text-center">
+        <h1 class="display-4 mb-4">Multi-Agent AI Recruitment System</h1>
+        <p class="lead mb-4">
+            Automate your recruitment process with our intelligent AI agents that analyze job descriptions,
+            match candidate resumes, and help you find the perfect candidates.
+        </p>
+        <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+            <a href="#upload-section" class="btn btn-primary btn-lg px-4 gap-3">
+                <i class="fas fa-upload me-2"></i>
+                Get Started
+            </a>
+            <a href="/dashboard" class="btn btn-outline-secondary btn-lg px-4">
+                <i class="fas fa-chart-line me-2"></i>
+                View Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-5">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-file-alt fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">JD Analysis</h5>
+                <p class="card-text">Our AI agents extract key skills, experience requirements, qualifications, and responsibilities from job descriptions.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-user-check fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">CV Matching</h5>
+                <p class="card-text">Intelligent extraction of candidate data from resumes and precise matching against job requirements.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-calendar-check fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Interview Scheduling</h5>
+                <p class="card-text">Automated email generation and interview scheduling with shortlisted candidates.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="upload-section" class="row mb-5">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Upload Job Description</h5>
+            </div>
+            <div class="card-body">
+                <form id="jd-upload-form" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="jd-title" class="form-label">Job Title</label>
+                        <input type="text" class="form-control" id="jd-title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="jd-department" class="form-label">Department</label>
+                        <input type="text" class="form-control" id="jd-department" name="department" required>
+                    </div>
+                    <div class="mb-3 file-upload">
+                        <label class="form-label">Job Description Document</label>
+                        <div class="upload-area">
+                            <i class="fas fa-file-upload fa-2x mb-3"></i>
+                            <p>Drag & drop your JD file here or click to browse</p>
+                            <p class="text-muted small">Supported formats: PDF, DOCX, TXT</p>
+                        </div>
+                        <span class="file-name d-none mt-2"></span>
+                        <input type="file" class="d-none" id="jd-file" name="file" accept=".pdf,.docx,.txt" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-analyze me-2"></i>
+                            Analyze Job Description
+                        </button>
+                        <div class="spinner-container text-center mt-3 d-none">
+                            <span class="loader"></span>
+                            <p class="mt-2">Analyzing job description...</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- JD Results (initially hidden) -->
+        <div id="jd-results" class="card mt-4 d-none">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">Job Description Analysis Results</h5>
+            </div>
+            <div class="card-body">
+                <!-- This will be filled dynamically by JavaScript -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">Upload Candidate Resume</h5>
+            </div>
+            <div class="card-body">
+                <form id="cv-upload-form" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="candidate-name" class="form-label">Candidate Name</label>
+                        <input type="text" class="form-control" id="candidate-name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="candidate-email" class="form-label">Candidate Email</label>
+                        <input type="email" class="form-control" id="candidate-email" name="email" required>
+                    </div>
+                    <div class="mb-3 file-upload">
+                        <label class="form-label">Resume/CV Document</label>
+                        <div class="upload-area">
+                            <i class="fas fa-file-upload fa-2x mb-3"></i>
+                            <p>Drag & drop the CV file here or click to browse</p>
+                            <p class="text-muted small">Supported formats: PDF, DOCX, TXT</p>
+                        </div>
+                        <span class="file-name d-none mt-2"></span>
+                        <input type="file" class="d-none" id="cv-file" name="file" accept=".pdf,.docx,.txt" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="job-selection" class="form-label">Select Job Position</label>
+                        <select class="form-select" id="job-selection" name="job_id" required>
+                            <option value="" selected disabled>Select a job position</option>
+                            <!-- This will be filled dynamically from the backend -->
+                        </select>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-info">
+                            <i class="fas fa-user-check me-2"></i>
+                            Process Candidate
+                        </button>
+                        <div class="spinner-container text-center mt-3 d-none">
+                            <span class="loader"></span>
+                            <p class="mt-2">Processing resume and matching...</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Fetch and populate job positions dropdown when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        const jobSelect = document.getElementById('job-selection');
+        
+        if (jobSelect) {
+            fetch('/api/job-descriptions')
+                .then(response => response.json())
+                .then(data => {
+                    // Clear loading option
+                    jobSelect.innerHTML = '<option value="" selected disabled>Select a job position</option>';
+                    
+                    // Add options for each job description
+                    data.forEach(job => {
+                        const option = document.createElement('option');
+                        option.value = job.id;
+                        option.textContent = `${job.title} (${job.department})`;
+                        jobSelect.appendChild(option);
+                    });
+                    
+                    // If no jobs found, show message
+                    if (data.length === 0) {
+                        const option = document.createElement('option');
+                        option.value = "";
+                        option.textContent = "No job positions available - upload a JD first";
+                        option.disabled = true;
+                        jobSelect.appendChild(option);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching job positions:', error);
+                    jobSelect.innerHTML = '<option value="" selected disabled>Error loading job positions</option>';
+                });
+        }
+    });
+</script>
+{% endblock %}

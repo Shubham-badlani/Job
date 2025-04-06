@@ -1,0 +1,71 @@
+/* Custom styles to complement Bootstrap */
+.score-badge {
+    font-size: 1.2rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.card-dashboard {
+    border-left: 4px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.card-dashboard:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card-dashboard.high-match {
+    border-left-color: var(--bs-success);
+}
+
+.card-dashboard.medium-match {
+    border-left-color: var(--bs-warning);
+}
+
+.card-dashboard.low-match {
+    border-left-color: var(--bs-danger);
+}
+
+.upload-area {
+    border: 2px dashed var(--bs-border-color);
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.upload-area:hover {
+    border-color: var(--bs-primary);
+}
+
+.upload-area.active {
+    border-color: var(--bs-success);
+    background-color: rgba(var(--bs-success-rgb), 0.1);
+}
+
+/* Custom animations */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Loading spinner */
+.loader {
+    width: 48px;
+    height: 48px;
+    border: 5px solid var(--bs-light);
+    border-bottom-color: var(--bs-primary);
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

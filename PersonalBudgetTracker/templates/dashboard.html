@@ -1,0 +1,344 @@
+{% extends "layout.html" %}
+
+{% block title %}AI Recruitment System - Dashboard{% endblock %}
+
+{% block head_extra %}
+<style>
+    .candidate-card {
+        transition: transform 0.2s ease;
+    }
+    
+    .candidate-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .chart-container {
+        height: 300px;
+        position: relative;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Recruitment Dashboard</h1>
+    <a href="/" class="btn btn-primary">
+        <i class="fas fa-upload me-2"></i>
+        Upload More Resumes
+    </a>
+</div>
+
+<div class="row mb-5">
+    <div class="col-md-4">
+        <div class="card text-center mb-4">
+            <div class="card-body">
+                <h1 class="display-4">{{ stats.total_candidates }}</h1>
+                <p class="lead">Total Candidates</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center mb-4">
+            <div class="card-body">
+                <h1 class="display-4">{{ stats.shortlisted }}</h1>
+                <p class="lead">Shortlisted</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center mb-4">
+            <div class="card-body">
+                <h1 class="display-4">{{ stats.job_positions }}</h1>
+                <p class="lead">Job Positions</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-5">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Candidate Match Scores</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="candidate-scores-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Match Category Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="category-distribution-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Job Positions Tabs -->
+<div class="card mb-5">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Candidates by Position</h5>
+    </div>
+    <div class="card-body">
+        <ul class="nav nav-tabs" id="jobTabs" role="tablist">
+            {% for job in jobs %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {% if loop.first %}active{% endif %}" 
+                        id="job-{{ job.id }}-tab" 
+                        data-bs-toggle="tab" 
+                        data-bs-target="#job-{{ job.id }}-content" 
+                        type="button" 
+                        role="tab" 
+                        aria-controls="job-{{ job.id }}-content" 
+                        aria-selected="{% if loop.first %}true{% else %}false{% endif %}">
+                    {{ job.title }}
+                </button>
+            </li>
+            {% endfor %}
+        </ul>
+        <div class="tab-content p-3" id="jobTabsContent">
+            {% for job in jobs %}
+            <div class="tab-pane fade {% if loop.first %}show active{% endif %}" 
+                 id="job-{{ job.id }}-content" 
+                 role="tabpanel" 
+                 aria-labelledby="job-{{ job.id }}-tab">
+                
+                <!-- Job description summary -->
+                <div class="job-summary mb-4">
+                    <h3>{{ job.title }}</h3>
+                    <p class="text-muted">Department: {{ job.department }}</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Key Skills Required</h5>
+                            <ul class="list-group mb-3">
+                                {% for skill in job.skills %}
+                                <li class="list-group-item">{{ skill }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Experience Requirements</h5>
+                            <ul class="list-group mb-3">
+                                {% for exp in job.experience %}
+                                <li class="list-group-item">{{ exp }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <h4 class="mb-3">Candidates ({{ job.candidates|length }})</h4>
+                {% if job.candidates %}
+                <div class="row">
+                    {% for candidate in job.candidates %}
+                    <div class="col-md-6 mb-4">
+                        <div class="card candidate-card card-dashboard {% if candidate.match_score >= 75 %}high-match{% elif candidate.match_score >= 50 %}medium-match{% else %}low-match{% endif %}">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="card-title mb-0">{{ candidate.name }}</h5>
+                                    <span class="badge {% if candidate.match_score >= 75 %}bg-success{% elif candidate.match_score >= 50 %}bg-warning{% else %}bg-danger{% endif %} score-badge">
+                                        {{ candidate.match_score }}%
+                                    </span>
+                                </div>
+                                <p class="card-text"><i class="fas fa-envelope me-2"></i>{{ candidate.email }}</p>
+                                
+                                <div class="mb-3">
+                                    <h6>Key Skills</h6>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% for skill in candidate.skills %}
+                                        <span class="badge bg-info">{{ skill }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <h6>Experience</h6>
+                                    <p class="mb-0 small">{{ candidate.experience }}</p>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between mt-3">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#candidateModal-{{ candidate.id }}">
+                                        View Details
+                                    </button>
+                                    
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#emailModal-{{ candidate.id }}">
+                                            <i class="fas fa-envelope me-1"></i> Email
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Candidate Details Modal -->
+                    <div class="modal fade" id="candidateModal-{{ candidate.id }}" tabindex="-1" aria-labelledby="candidateModalLabel-{{ candidate.id }}" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="candidateModalLabel-{{ candidate.id }}">{{ candidate.name }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row mb-4">
+                                        <div class="col-md-6">
+                                            <h5>Candidate Details</h5>
+                                            <p><strong>Email:</strong> {{ candidate.email }}</p>
+                                            <p><strong>Match Score:</strong> {{ candidate.match_score }}%</p>
+                                            
+                                            <h5 class="mt-4">Skills</h5>
+                                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                                {% for skill in candidate.skills %}
+                                                <span class="badge bg-info">{{ skill }}</span>
+                                                {% endfor %}
+                                            </div>
+                                            
+                                            <h5 class="mt-4">Experience</h5>
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    {{ candidate.experience }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h5>Skills Match</h5>
+                                            <div class="chart-container">
+                                                <canvas id="skills-match-chart" data-candidate-id="{{ candidate.id }}"></canvas>
+                                            </div>
+                                            
+                                            <h5 class="mt-4">Education</h5>
+                                            <ul class="list-group">
+                                                {% for edu in candidate.education %}
+                                                <li class="list-group-item">
+                                                    <div class="fw-bold">{{ edu.degree }}</div>
+                                                    {{ edu.institution }} ({{ edu.year }})
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    
+                                    <h5>Match Analysis</h5>
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Category</th>
+                                                <th>Required</th>
+                                                <th>Candidate</th>
+                                                <th>Match</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Skills</td>
+                                                <td>{{ candidate.match_analysis.skills.required }}</td>
+                                                <td>{{ candidate.match_analysis.skills.found }}</td>
+                                                <td>{{ candidate.match_analysis.skills.percentage }}%</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Experience</td>
+                                                <td>{{ candidate.match_analysis.experience.required }}</td>
+                                                <td>{{ candidate.match_analysis.experience.found }}</td>
+                                                <td>{{ candidate.match_analysis.experience.percentage }}%</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Education</td>
+                                                <td>{{ candidate.match_analysis.education.required }}</td>
+                                                <td>{{ candidate.match_analysis.education.found }}</td>
+                                                <td>{{ candidate.match_analysis.education.percentage }}%</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#emailModal-{{ candidate.id }}">
+                                        <i class="fas fa-envelope me-1"></i> Schedule Interview
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Email Template Modal -->
+                    <div class="modal fade" id="emailModal-{{ candidate.id }}" tabindex="-1" aria-labelledby="emailModalLabel-{{ candidate.id }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="emailModalLabel-{{ candidate.id }}">Interview Request for {{ candidate.name }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form>
+                                        <div class="mb-3">
+                                            <label for="email-to-{{ candidate.id }}" class="form-label">To</label>
+                                            <input type="email" class="form-control" id="email-to-{{ candidate.id }}" value="{{ candidate.email }}" readonly>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="email-subject-{{ candidate.id }}" class="form-label">Subject</label>
+                                            <input type="text" class="form-control" id="email-subject-{{ candidate.id }}" value="Interview Request: {{ job.title }} Position">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="email-body-{{ candidate.id }}" class="form-label">Email Body</label>
+                                            <textarea class="form-control" id="email-body-{{ candidate.id }}" rows="10">Dear {{ candidate.name }},
+
+I hope this email finds you well. Thank you for applying for the {{ job.title }} position at our company.
+
+We were impressed with your application and would like to invite you for an interview to discuss your qualifications further.
+
+Could you please provide your availability for the upcoming week? We're flexible and happy to accommodate your schedule.
+
+Looking forward to speaking with you soon.
+
+Best regards,
+Recruitment Team</textarea>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="interview-date-{{ candidate.id }}" class="form-label">Suggested Interview Date</label>
+                                            <input type="date" class="form-control" id="interview-date-{{ candidate.id }}">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="interview-time-{{ candidate.id }}" class="form-label">Suggested Interview Time</label>
+                                            <input type="time" class="form-control" id="interview-time-{{ candidate.id }}">
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    <button type="button" class="btn btn-primary">Send Email</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No candidates have been processed for this position yet.
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js Script -->
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endblock %}
